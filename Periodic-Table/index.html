@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Periodic Table</title>
+    <!-- Link to Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Michroma&family=Inconsolata&display=swap" rel="stylesheet">
+    <!-- Include Math.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.0/math.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: black; /* Background color for the entire application */
+            color: white; /* Default text color to ensure readability on black background */
+            padding: 20px;
+            box-sizing: border-box; /* Ensures padding is included in width calculations */
+        }
+        h1 {
+            font-family: 'Exo 2', sans-serif;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #elementNameDisplay {
+            font-family: 'Michroma', sans-serif;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        #element-details {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-family: 'Inconsolata', monospace;
+            max-width: 100%; /* Ensure details don't exceed screen width */
+            overflow-x: auto; /* Enable horizontal scrolling if necessary */
+        }
+        .hidden {
+            display: none;
+        }
+        input[type="text"] {
+            border: 2px solid white; /* Border color */
+            background-color: black; /* Textbox background color */
+            color: white; /* Input text color */
+            border-radius: 5px; /* Slightly curved border */
+            padding: 10px; /* Add some padding for better appearance */
+            font-family: 'Michroma', sans-serif; /* Font for input text */
+            width: calc(100% - 22px); /* Full width minus padding and border */
+            max-width: 400px; /* Maximum width for the input */
+            box-sizing: border-box; /* Ensures width includes padding and border */
+            margin-bottom: 10px; /* Space below the input */
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #DC143C; /* Button color */
+            color: white; /* Button text color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Exo 2', sans-serif; /* Font for button text */
+            margin-top: 10px; /* Space above the button */
+            font-size: 1em; /* Ensures button text is readable */
+        }
+        button:hover {
+            background-color: #b22222; /* Darker shade of button color on hover */
+        }
+        #copyButton {
+            display: block; /* Ensure it is displayed as a block-level element */
+        }
+        @media (max-width: 600px) {
+            #elementNameDisplay {
+                font-size: 1.2em;
+            }
+            button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+            input[type="text"] {
+                width: calc(100% - 20px); /* Adjust width for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Modern Periodic Table</h1>
+    <input type="text" id="elementName" placeholder="Enter element name" />
+    <button onclick="findElement()">Find</button>
+
+    <div id="element-details" class="hidden">
+        <h2 id="elementNameDisplay"></h2>
+        <p><strong>Symbol:</strong> <span id="elementSymbol"></span></p>
+        <p><strong>Atomic Number:</strong> <span id="elementNumber"></span></p>
+        <p><strong>Atomic Mass:</strong> <span id="elementAtomicMass"></span></p>
+        <p><strong>Phase:</strong> <span id="elementPhase"></span></p>
+        <p><strong>Shells:</strong> <span id="elementShells"></span></p>
+        <p><strong>Electronic Configuration:</strong> <span id="elementElectronConfig"></span></p>
+        <p><strong>Electron Affinity:</strong> <span id="elementElectronAffinity"></span> eV</p>
+        <p><strong>Period:</strong> <span id="elementPeriod"></span></p>
+        <p><strong>Electronegativity:</strong> <span id="elementElectronegativity"></span></p>
+        <p><strong>Melting Point:</strong> <span id="elementMeltPoint"></span> °C</p>
+        <p><strong>Boiling Point:</strong> <span id="elementBoilPoint"></span> °C</p>
+        <p><strong>Ionization Energy:</strong> <span id="elementIonizationEnergy"></span> eV</p>
+        <button id="copyButton" class="hidden" onclick="copyDetails()">Copy</button>
+    </div>
+
+    <script>
+        async function fetchElementData() {
+            try {
+                const response = await fetch('PeriodicTable.json');
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching the periodic table data:', error);
+                return [];
+            }
+        }
+
+        async function findElement() {
+            const elementName = document.getElementById('elementName').value.trim().toLowerCase();
+            const elements = await fetchElementData();
+            const element = elements.find(e => e.name.toLowerCase() === elementName);
+
+            if (element) {
+                document.getElementById('elementNameDisplay').innerText = element.name;
+                document.getElementById('elementSymbol').innerText = element.symbol;
+                document.getElementById('elementNumber').innerText = element.number;
+                document.getElementById('elementAtomicMass').innerText = element.atomic_mass;
+                document.getElementById('elementPhase').innerText = element.phase;
+                document.getElementById('elementShells').innerText = element.shells.join(', ');
+                document.getElementById('elementElectronConfig').innerText = element.electron_configuration;
+                
+                // Convert electron affinity from kJ/mol to eV and round to 2 decimal places
+                const electronAffinityInEvs = (element.electron_affinity / 96.485).toFixed(2);
+                document.getElementById('elementElectronAffinity').innerText = electronAffinityInEvs;
+                
+                document.getElementById('elementPeriod').innerText = element.period;
+                document.getElementById('elementElectronegativity').innerText = element.electronegativity_pauling;
+                document.getElementById('elementMeltPoint').innerText = element.melt;
+                document.getElementById('elementBoilPoint').innerText = element.boil;
+                
+                // Convert ionization energy from kJ/mol to eV and round to 2 decimal places
+                const ionizationEnergyInEvs = (element.ionization_energies[0] / 96.485).toFixed(2); // Assuming the first ionization energy is used
+                document.getElementById('elementIonizationEnergy').innerText = ionizationEnergyInEvs;
+
+                document.getElementById('element-details').classList.remove('hidden');
+                document.getElementById('copyButton').classList.remove('hidden');
+            } else {
+                alert('Element not found. Please check the name and try again.');
+                document.getElementById('element-details').classList.add('hidden');
+                document.getElementById('copyButton').classList.add('hidden');
+            }
+        }
+
+        function copyDetails() {
+            const elementDetails = document.getElementById('element-details').innerText;
+            navigator.clipboard.writeText(elementDetails)
+                .then(() => {
+                    alert('Element details copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        }
+    </script>
+</body>
+</html>
